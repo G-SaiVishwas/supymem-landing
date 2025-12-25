@@ -1,9 +1,12 @@
 "use client";
 
 import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Stars } from "@react-three/drei";
+import { Canvas, useFrame, extend } from "@react-three/fiber";
+import { Float, Stars, Line } from "@react-three/drei";
 import * as THREE from "three";
+
+// Extend Three.js elements for React Three Fiber
+extend({ Line_: THREE.Line });
 
 interface NodeProps {
   position: [number, number, number];
@@ -49,9 +52,6 @@ interface ConnectionProps {
 }
 
 function Connection({ start, end, color }: ConnectionProps) {
-  const ref = useRef<THREE.Line>(null);
-  const progressRef = useRef(0);
-
   const points = useMemo(() => {
     const curve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(...start),
@@ -65,23 +65,14 @@ function Connection({ start, end, color }: ConnectionProps) {
     return curve.getPoints(50);
   }, [start, end]);
 
-  useFrame((state) => {
-    if (ref.current) {
-      progressRef.current = (progressRef.current + 0.005) % 1;
-      const material = ref.current.material as THREE.LineBasicMaterial;
-      material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 2 + progressRef.current * Math.PI * 2) * 0.2;
-    }
-  });
-
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
-    return geo;
-  }, [points]);
-
   return (
-    <line ref={ref} geometry={geometry}>
-      <lineBasicMaterial color={color} transparent opacity={0.4} linewidth={1} />
-    </line>
+    <Line
+      points={points}
+      color={color}
+      lineWidth={1}
+      transparent
+      opacity={0.4}
+    />
   );
 }
 
@@ -223,4 +214,3 @@ export default function NetworkVisualization() {
     </div>
   );
 }
-
